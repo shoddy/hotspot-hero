@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  
+  <!-- Hero Shield Background -->
+  <path
+      android:fillColor="#2196F3"
+      android:pathData="M54,20C54,20 35,25 35,45C35,65 54,85 54,85C54,85 73,65 73,45C73,25 54,20 54,20Z"/>
+  
+  <!-- WiFi Signal Waves -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M54,45C57,45 60,48 60,51C60,54 57,57 54,57C51,57 48,54 48,51C48,48 51,45 54,45Z"/>
+  
+  <path
+      android:fillColor="#FFFFFF"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="2"
+      android:fillType="nonZero"
+      android:pathData="M45,51C45,46 49,42 54,42C59,42 63,46 63,51"/>
+  
+  <path
+      android:fillColor="#FFFFFF"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="2"
+      android:fillType="nonZero"
+      android:pathData="M42,51C42,44 47,38 54,38C61,38 66,44 66,51"/>
+  
+  <!-- Hero Cape Effect -->
+  <path
+      android:fillColor="#FF5722"
+      android:pathData="M54,20C54,20 58,22 62,28C65,32 67,38 67,45C67,50 65,55 62,58C60,60 58,61 56,62L54,85L52,62C50,61 48,60 46,58C43,55 41,50 41,45C41,38 43,32 46,28C50,22 54,20 54,20Z"
+      android:alpha="0.7"/>
+      
+</vector>
