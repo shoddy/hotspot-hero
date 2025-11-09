@@ -1,6 +1,7 @@
 package com.bluetoothhotspot.automation
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -591,10 +592,13 @@ class MainActivity : AppCompatActivity() {
             val services = Settings.Secure.getString(
                 contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            )
-            val serviceName = "${packageName}/.service.HotspotAccessibilityService"
-            Log.d("MainActivity", "Checking accessibility service - Enabled services: '$services', Looking for: '$serviceName'")
-            val isEnabled = services?.contains(serviceName) == true
+            ) ?: ""
+            val expectedComponent = ComponentName(this, HotspotAccessibilityService::class.java)
+            val expectedName = expectedComponent.flattenToString()
+            Log.d("MainActivity", "Checking accessibility service - Enabled services: '$services', Looking for: '$expectedName'")
+            val isEnabled = services.split(':')
+                .map { it.trim() }
+                .any { it.equals(expectedName, ignoreCase = true) }
             Log.d("MainActivity", "Accessibility service enabled: $isEnabled")
             return isEnabled
         }
