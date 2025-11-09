@@ -475,9 +475,20 @@ class BluetoothMonitorService : Service() {
     
     private fun triggerHotspotControl(enable: Boolean, wasScreenWoken: Boolean = false) {
         try {
+            if (!enable) {
+                Log.d(TAG, "Hotspot disable requested - skipping (enable-only automation)")
+                logActivity(
+                    "Hotspot disable skipped",
+                    targetDeviceName,
+                    true,
+                    "Disable automation removed - no action taken"
+                )
+                return
+            }
+            
             // Use SharedPreferences to communicate with HotspotAccessibilityService
             val prefs = getSharedPreferences("hotspot_commands", Context.MODE_PRIVATE)
-            val command = if (enable) "ENABLE" else "DISABLE"
+            val command = "ENABLE"
             
             prefs.edit()
                 .putString("pending_command", command)

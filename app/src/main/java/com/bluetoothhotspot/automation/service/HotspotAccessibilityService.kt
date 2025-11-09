@@ -26,6 +26,7 @@ class HotspotAccessibilityService : AccessibilityService() {
     private var pendingDeviceName: String? = null
     private var commandCheckRunnable: Runnable? = null
     private var isExecutingAction = false
+    private var executingDeviceName: String? = null
     
     companion object {
         private const val TAG = "HotspotAccessibilityService"
@@ -48,11 +49,14 @@ class HotspotAccessibilityService : AccessibilityService() {
         Log.d(TAG, "HotspotAccessibilityService connected")
         
         // Show a notification to confirm service is working
-        try {
-            NotificationHelper.getInstance().showHotspotControlErrorNotification("Accessibility service connected and ready")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to show notification", e)
+        Log.d(TAG, "HotspotAccessibilityService connected and ready")
+        val logIntent = Intent("com.bluetoothhotspot.automation.LOG_ACTIVITY").apply {
+            putExtra("action", "Accessibility service ready")
+            putExtra("device_name", "")
+            putExtra("success", true)
+            putExtra("details", "Service connected and listening for hotspot commands")
         }
+        sendBroadcast(logIntent)
         
         setupBroadcastReceiver()
         startPeriodicCommandCheck()
@@ -73,10 +77,12 @@ class HotspotAccessibilityService : AccessibilityService() {
                 Log.d(TAG, "Executing pending action: $pendingAction")
                 isExecutingAction = true
                 val actionToExecute = pendingAction
-                
+                val deviceForAction = pendingDeviceName
+
                 // Clear pending action immediately to prevent multiple executions
                 pendingAction = null
                 pendingDeviceName = null
+                executingDeviceName = deviceForAction
                 
                 handler.postDelayed({
                     // Execute the action we captured
@@ -214,9 +220,18 @@ class HotspotAccessibilityService : AccessibilityService() {
         // Check if hotspot is already enabled
         if (isHotspotCurrentlyEnabled()) {
             Log.d(TAG, "Hotspot is already enabled, skipping automation to avoid toggling it off")
-            NotificationHelper.getInstance().showHotspotControlErrorNotification(
-                "🦸‍♂️ Hotspot already active - HotSpot Hero standing by!"
-            )
+            try {
+                NotificationHelper.getInstance().showHotspotEnabledNotification(deviceName)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to show already-enabled notification", e)
+            }
+            val intent = Intent("com.bluetoothhotspot.automation.LOG_ACTIVITY").apply {
+                putExtra("action", "Hotspot already enabled")
+                putExtra("device_name", deviceName)
+                putExtra("success", true)
+                putExtra("details", "No automation required")
+            }
+            sendBroadcast(intent)
             return
         }
         
@@ -425,7 +440,8 @@ class HotspotAccessibilityService : AccessibilityService() {
         // Assume the action was successful since we tapped the tile
         Log.d(TAG, "Hotspot enabled successfully")
 
-        notifyHotspotStateChange(pendingDeviceName ?: "")
+        val deviceName = executingDeviceName ?: pendingDeviceName ?: ""
+        notifyHotspotStateChange(deviceName)
         clearPendingAction()
     }
     
@@ -499,7 +515,7 @@ class HotspotAccessibilityService : AccessibilityService() {
         // Notify BluetoothMonitorService about the failure
         val intent = Intent("com.bluetoothhotspot.automation.LOG_ACTIVITY").apply {
             putExtra("action", "Hotspot control failed")
-            putExtra("device_name", pendingDeviceName ?: "")
+            putExtra("device_name", executingDeviceName ?: pendingDeviceName ?: "")
             putExtra("success", false)
             putExtra("details", error)
         }
@@ -520,6 +536,24 @@ class HotspotAccessibilityService : AccessibilityService() {
             Log.e(TAG, "Failed to show hotspot notification", e)
         }
         
+        val logIntent = Intent("com.bluetoothhotspot.automation.LOG_ACTIVITY").apply {
+            putExtra("action", "Hotspot enabled")
+            putExtra("device_name", deviceName)
+            putExtra("success", true)
+            putExtra("details", "Automation tapped quick settings successfully")
+        }
+        sendBroadcast(logIntent)
+
+        try {
+            val serviceIntent = Intent(applicationContext, BluetoothMonitorService::class.java).apply {
+                action = BluetoothMonitorService.ACTION_UPDATE_HOTSPOT_STATE
+                putExtra(BluetoothMonitorService.EXTRA_HOTSPOT_ENABLED, true)
+            }
+            applicationContext.startService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to notify BluetoothMonitorService about hotspot state", e)
+        }
+
         Log.d(TAG, "Hotspot enabled for device: $deviceName")
     }
     
@@ -528,9 +562,10 @@ class HotspotAccessibilityService : AccessibilityService() {
      */
     private fun clearPendingAction() {
 
-        pendingAction = null
-        pendingDeviceName = null
-        isExecutingAction = false
+    pendingAction = null
+    pendingDeviceName = null
+    executingDeviceName = null
+    isExecutingAction = false
     }
     
     override fun onDestroy() {

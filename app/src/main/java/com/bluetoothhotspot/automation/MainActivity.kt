@@ -59,7 +59,6 @@ class MainActivity : AppCompatActivity() {
     private var automationSettings = AutomationSettings()
     
     // Broadcast receivers
-    private var bluetoothStateReceiver: BroadcastReceiver? = null
     private var activityLogReceiver: BroadcastReceiver? = null
     
     // Permission handling
@@ -707,7 +706,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         
-        // Broadcast receiver registration removed
+    registerBroadcastReceivers()
         
         // Comprehensive permission and service validation
         val hasAllRequirements = hasAllRequiredPermissionsAndServices()
@@ -748,7 +747,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         
-        // Broadcast receiver unregistration removed
+        unregisterBroadcastReceivers()
     }
     
     /**
@@ -844,6 +843,37 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         
-        // Broadcast receivers removed
+        unregisterBroadcastReceivers()
+    }
+
+    private fun registerBroadcastReceivers() {
+        if (activityLogReceiver == null) {
+            activityLogReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val action = intent?.getStringExtra("action") ?: return
+                    val deviceName = intent.getStringExtra("device_name") ?: ""
+                    val success = intent.getBooleanExtra("success", true)
+                    val details = intent.getStringExtra("details") ?: ""
+                    showActivityLog(action, deviceName, success, details)
+                }
+            }
+            ContextCompat.registerReceiver(
+                this,
+                activityLogReceiver,
+                IntentFilter("com.bluetoothhotspot.automation.LOG_ACTIVITY"),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
+    }
+
+    private fun unregisterBroadcastReceivers() {
+        activityLogReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (e: IllegalArgumentException) {
+                Log.w("MainActivity", "Activity log receiver already unregistered", e)
+            }
+        }
+        activityLogReceiver = null
     }
 }
