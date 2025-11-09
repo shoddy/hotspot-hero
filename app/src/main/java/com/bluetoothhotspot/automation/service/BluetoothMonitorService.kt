@@ -37,6 +37,7 @@ class BluetoothMonitorService : Service() {
     private lateinit var screenWakeManager: ScreenWakeManager
     
     private var bluetoothReceiver: BluetoothBroadcastReceiver? = null
+    private var hotspotStateReceiver: BroadcastReceiver? = null
     private var targetDeviceName: String = ""
     private var isAutomationEnabled: Boolean = true
     private var isTargetDeviceConnected: Boolean = false
@@ -60,6 +61,11 @@ class BluetoothMonitorService : Service() {
         const val EXTRA_TARGET_DEVICE = "target_device"
         const val EXTRA_HOTSPOT_ENABLED = "hotspot_enabled"
         const val EXTRA_AUTOMATION_ENABLED = "automation_enabled"
+
+        private const val ACTION_WIFI_AP_STATE_CHANGED = "android.net.wifi.WIFI_AP_STATE_CHANGED"
+        private const val EXTRA_WIFI_AP_STATE = "wifi_state"
+        private const val WIFI_AP_STATE_DISABLED = 11
+        private const val WIFI_AP_STATE_ENABLED = 13
     }
     
     override fun onBind(intent: Intent?): IBinder? {
@@ -173,7 +179,7 @@ class BluetoothMonitorService : Service() {
             deviceName = targetDeviceName,
             isConnected = isTargetDeviceConnected,
             connectionTime = System.currentTimeMillis(),
-            hotspotEnabled = false // This will be updated by the accessibility service
+            hotspotEnabled = connectionStateManager.isHotspotEnabled()
         )
         connectionStateManager.saveConnectionState(state)
     }
@@ -253,6 +259,7 @@ class BluetoothMonitorService : Service() {
         
         // Register Bluetooth broadcast receiver
         registerBluetoothReceiver()
+    registerHotspotStateReceiver()
         
         // Check current connection state
         checkCurrentConnectionState()
@@ -264,6 +271,7 @@ class BluetoothMonitorService : Service() {
     private fun stopMonitoring() {
         // Unregister receiver
         unregisterBluetoothReceiver()
+    unregisterHotspotStateReceiver()
         
         // Cancel any pending debounce operations
         disconnectionRunnable?.let { debounceHandler.removeCallbacks(it) }
@@ -403,6 +411,16 @@ class BluetoothMonitorService : Service() {
         }
         
         Log.d(TAG, "Target device connected: $targetDeviceName")
+
+        if (connectionStateManager.isHotspotEnabled()) {
+            logActivity(
+                "Hotspot already active",
+                targetDeviceName,
+                true,
+                "Skipping automation because hotspot is already enabled"
+            )
+            return
+        }
         
         // Check if screen needs to be woken
         if (!screenWakeManager.isScreenOn()) {
@@ -576,12 +594,63 @@ class BluetoothMonitorService : Service() {
         disconnectionRunnable?.let { debounceHandler.removeCallbacks(it) }
         
         // Release wake lock if held
-        screenWakeManager.releaseWakeLock()
+    screenWakeManager.releaseWakeLock()
+
+    unregisterHotspotStateReceiver()
         
         // Save final connection state before service stops
         saveCurrentConnectionState()
         
         logActivity("Service stopped", targetDeviceName, true, "Bluetooth monitoring service destroyed")
+    }
+
+    private fun registerHotspotStateReceiver() {
+        if (hotspotStateReceiver != null) return
+
+        hotspotStateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let { handleHotspotStateIntent(it) }
+            }
+        }
+
+        ContextCompat.registerReceiver(
+            this,
+            hotspotStateReceiver,
+            IntentFilter(ACTION_WIFI_AP_STATE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        Log.d(TAG, "Hotspot state receiver registered")
+
+        registerReceiver(null, IntentFilter(ACTION_WIFI_AP_STATE_CHANGED))?.let {
+            handleHotspotStateIntent(it)
+        }
+    }
+
+    private fun unregisterHotspotStateReceiver() {
+        hotspotStateReceiver?.let {
+            try {
+                unregisterReceiver(it)
+                Log.d(TAG, "Hotspot state receiver unregistered")
+            } catch (e: IllegalArgumentException) {
+                Log.w(TAG, "Hotspot receiver already unregistered", e)
+            }
+        }
+        hotspotStateReceiver = null
+    }
+
+    private fun handleHotspotStateIntent(intent: Intent) {
+        if (intent.action != ACTION_WIFI_AP_STATE_CHANGED) return
+        val state = intent.getIntExtra(EXTRA_WIFI_AP_STATE, WIFI_AP_STATE_DISABLED)
+        when (state) {
+            WIFI_AP_STATE_ENABLED -> {
+                connectionStateManager.updateHotspotState(true)
+                logActivity("Hotspot state", targetDeviceName, true, "Hotspot reported enabled by system")
+            }
+            WIFI_AP_STATE_DISABLED -> {
+                connectionStateManager.updateHotspotState(false)
+                logActivity("Hotspot state", targetDeviceName, true, "Hotspot reported disabled by system")
+            }
+        }
     }
     
     /**

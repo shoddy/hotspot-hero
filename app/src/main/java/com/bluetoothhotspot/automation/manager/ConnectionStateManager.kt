@@ -115,6 +115,12 @@ class ConnectionStateManager(private val context: Context) {
         }
         Log.d(TAG, "Hotspot state updated: $enabled")
     }
+
+    fun isHotspotEnabled(): Boolean {
+        val enabled = sharedPreferences.getBoolean(PREF_HOTSPOT_ENABLED, false)
+        Log.d(TAG, "Hotspot enabled flag read: $enabled")
+        return enabled
+    }
     
     /**
      * Get time since last disconnection in milliseconds
