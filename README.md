@@ -90,26 +90,73 @@ Before installing HotSpot Hero, you need:
 
 **Ready to try HotSpot Hero?**
 
-**[⬇️ Download hotspot-hero-v1.0.0.apk](release/hotspot-hero-v1.0.0.apk)** (10.7 MB)
+**[⬇️ Download hotspot-hero-latest.apk](release/hotspot-hero-latest.apk)** (~13 MB)
 
 Then follow the installation steps below.
 
 ## 📥 Installation
 
+**Important:** This app requires ADB (Android Debug Bridge) to install because it needs special accessibility permissions that can't be granted through normal installation.
+
 ### Step 1: Download
-1. Download the APK directly: **[hotspot-hero-v1.0.0.apk](release/hotspot-hero-v1.0.0.apk)**
-2. Or browse all releases in the [release/](release/) directory
+1. Download the APK directly: **[hotspot-hero-latest.apk](release/hotspot-hero-latest.apk)**
+2. Save it somewhere easy to find (like your Downloads folder)
 
-### Step 2: Install via ADB
+### Step 2: Install ADB (First Time Only)
+
+**If you've never used ADB before:**
+
+#### Windows:
+1. Download [Platform Tools](https://developer.android.com/studio/releases/platform-tools) from Google
+2. Extract the ZIP file to `C:\platform-tools\`
+3. Open Command Prompt and run:
+  ```cmd
+  cd C:\platform-tools
+  adb version
+  ```
+
+#### macOS:
+1. Install via Homebrew (recommended):
+  ```bash
+  brew install android-platform-tools
+  ```
+2. Or download [Platform Tools](https://developer.android.com/studio/releases/platform-tools) manually
+
+#### Linux:
 ```bash
-# Connect your phone via USB
-# Make sure USB debugging is enabled
+# Ubuntu/Debian
+sudo apt install android-tools-adb
 
-# Install the APK
-adb install hotspot-hero-v1.0.0.apk
+# Fedora
+sudo dnf install android-tools
 ```
 
-### Step 3: Grant Permissions
+### Step 3: Enable Developer Options on Your Phone
+1. Open **Settings** on your Android phone
+2. Go to **About Phone**
+3. Find **Build Number** and tap it **7 times**
+4. You'll see "You are now a developer!"
+5. Go back to main Settings
+6. Find **System** → **Developer Options** (or just **Developer Options**)
+7. Enable **USB Debugging**
+
+### Step 4: Connect Your Phone and Install
+```bash
+# Connect your phone to your computer with a USB cable
+# Your phone will show a prompt "Allow USB debugging?" - tap "Allow"
+
+# Navigate to where you downloaded the APK, then:
+adb install hotspot-hero-latest.apk
+
+# You should see "Success" when it's done
+```
+
+**Troubleshooting Installation:**
+- If `adb` command not found: Make sure ADB is in your PATH or `cd` to the platform-tools directory
+- If "no devices/emulators found": Check USB cable, try a different USB port, make sure USB debugging is enabled
+- If "device unauthorized": Check your phone for the USB debugging prompt and tap "Allow"
+
+### Step 5: Grant Permissions
 1. **Open HotSpot Hero** from your app drawer
 2. **Grant Bluetooth permissions** when prompted
 3. **Grant Location permission** when prompted
@@ -119,7 +166,7 @@ adb install hotspot-hero-v1.0.0.apk
    - Toggle it ON
    - Confirm the warning dialog
 
-### Step 4: Configure Your Car
+### Step 6: Configure Your Car
 1. **Select your car's Bluetooth device** from the dropdown
 2. **Enable automation** with the toggle switch
 3. **Test it works** with the "Test Enable" button
@@ -179,7 +226,7 @@ If you want to modify the app or build it yourself:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/hotspot-hero.git
+git clone git@github.com:shoddy/hotspot-hero.git
 cd hotspot-hero
 
 # Build the APK
@@ -239,4 +286,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-...and yes, this whole thing was Claude generated. But it works - so 🤷
+...and yes, `You're absolutely right!` this whole thing was Claude generated. But it works - so 🤷

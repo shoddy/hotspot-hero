@@ -2,10 +2,39 @@
 
 ## Current Release
 
+### Latest - Current Working Version
+**File:** `hotspot-hero-latest.apk`  
+**Size:** ~13 MB  
+**Date:** November 2025
+
+**New in this version:**
+- ✅ Fixed accessibility service detection (automation toggle now works correctly)
+- ✅ Activity log now updates in real-time with automation events
+- ✅ Smart hotspot detection - skips automation if hotspot already enabled
+- ✅ Better error handling and user feedback
+- ✅ Improved notification messages
+- ✅ Background Wi-Fi hotspot state tracking
+
+**Tested On:**
+- Google Pixel 6a (Android 13+)
+- Successfully handles rapid Bluetooth reconnections (e.g., fuel stops)
+
+**Installation:**
+```bash
+adb install hotspot-hero-latest.apk
+```
+
+**SHA256 Checksum:**
+```
+906a39512b14283837ad52cf809b0ac066a4d2b2c7759db4d977e4278a33dcee  hotspot-hero-latest.apk
+```
+
 ### v1.0.0 - Initial Release
 **File:** `hotspot-hero-v1.0.0.apk`  
 **Size:** ~10.7 MB  
 **Date:** October 2024
+
+*Note: This is the original release. Use `hotspot-hero-latest.apk` for the most recent version with bug fixes.*
 
 **Features:**
 - ✅ Automatic hotspot activation when car Bluetooth connects
@@ -26,9 +55,16 @@ adb install hotspot-hero-v1.0.0.apk
 
 ## Version History
 
+### Latest (November 2025)
+- Fixed automation toggle not staying enabled
+- Restored real-time activity log updates
+- Added duplicate automation prevention when hotspot already enabled
+- Improved error handling and notifications
+- Background hotspot state tracking via system broadcasts
+
 ### v1.0.0 (October 2024)
 - Initial public release
-- Complete car automation functionality
+- Basic car automation functionality
 - Screen wake support
 - Battery optimizations
 - Hero-themed branding
